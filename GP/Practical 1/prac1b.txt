@@ -1,0 +1,89 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+using Microsoft.DirectX; //OUR CODE
+using Microsoft.DirectX.Direct3D; //OUR CODE
+
+namespace pract1b
+{
+    public partial class Form1 : Form
+    {
+        Microsoft.DirectX.Direct3D.Device device;
+        Microsoft.DirectX.Direct3D.Texture texture; 
+        Microsoft.DirectX.Direct3D.Font font;
+        public Form1()
+        {
+            InitializeComponent();
+            InitDevice(); 
+            InitFont(); 
+            LoadTexture();
+            this.Paint += new PaintEventHandler(Form1_Paint);
+        }
+        private void InitFont() 
+        {
+            System.Drawing.Font f = new System.Drawing.Font("Arial", 16f, FontStyle.Regular);
+            font = new Microsoft.DirectX.Direct3D.Font(device, f);
+        }
+
+        private void LoadTexture() 
+        {
+            try
+            {
+                texture = TextureLoader.FromFile(device, "C:\\Users\\visha\\OneDrive\\Pictures\\wal2\\1920x1080-catan-vr-4k_1543621071.jpg", 900, 450, 1, 0,
+                    Format.A8B8G8R8, Pool.Managed, Filter.Point, Filter.Point, Color.Transparent.ToArgb());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error loading texture: " + ex.Message);
+            }
+        }
+
+        private void InitDevice() 
+        {
+            PresentParameters pp = new PresentParameters();
+            pp.Windowed = true;
+            pp.SwapEffect = SwapEffect.Discard;
+            device = new Device(0, DeviceType.Hardware, this,
+                CreateFlags.SoftwareVertexProcessing, pp);
+        }
+
+        private void Render() 
+        {
+            device.Clear(ClearFlags.Target, Color.Cyan, 0, 1);
+            device.BeginScene();
+            using (Sprite s = new Sprite(device))
+            {
+                s.Begin(SpriteFlags.AlphaBlend);
+
+                // Get the texture dimensions
+                int textureWidth = texture.GetLevelDescription(0).Width;
+                int textureHeight = texture.GetLevelDescription(0).Height;
+
+                // Create a rectangle based on the texture dimensions
+                Rectangle textureRect = new Rectangle(0, 0, textureWidth, textureHeight);
+
+                // Fixed the Draw2D method call with a Rectangle
+                s.Draw2D(texture,
+                          new Rectangle(0, 0, device.Viewport.Width, device.Viewport.Height), // Destination rectangle
+                          textureRect,
+                          new Point(0, 0),
+                          0f,
+                          new Point(0, 0),
+                          Color.White);
+                font.DrawText(s, "GAME PROGRAMMING", new Point(0, 0), Color.Black);
+                s.End();
+            }
+            device.EndScene();
+            device.Present();
+        }
+
+
+        private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            Render(); 
+        }
+    }
+}
+
+
+
